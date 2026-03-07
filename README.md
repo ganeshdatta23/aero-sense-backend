@@ -1,4 +1,4 @@
-[poa.html](https://github.com/user-attachments/files/25811732/poa.html)
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
