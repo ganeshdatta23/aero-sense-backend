@@ -12,7 +12,7 @@
          1. Concept & Stack -> Doughnut Chart (Chart.js) -> Shows distribution of tech stack -> Quickly communicates full-stack capability -> NO SVG.
          2. Live Dashboard Mockup -> Line/Bar Combo Chart (Chart.js) -> Simulates final product data -> Proves understanding of analytics frontend -> NO SVG.
          3. Architecture Diagram -> ASCII Art within <pre> tags -> Represents system flow -> Avoids Mermaid/SVG constraints while maintaining technical feel -> NO SVG. 
-         4. Roadmap -> Interactive HTML list -> Allows step-by-step exploration -> NO SVG. -->
+         4. RoadMap -> Interactive HTML list -> Allows step-by-step exploration -> NO SVG. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 
     <script src="https://cdn.tailwindcss.com"></script>
