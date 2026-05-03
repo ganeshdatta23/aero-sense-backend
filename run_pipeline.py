@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 from datetime import datetime
 
 # Add the project root to sys.path to allow absolute imports
@@ -10,7 +11,7 @@ from data_pipeline.tasks.fetch_weather_data import fetch_weather
 from data_pipeline.tasks.load_data_to_db import load_data
 
 def run_ingestion():
-    print(f"[{datetime.now()}] Starting manual ingestion...")
+    print(f"[{datetime.now()}] Starting ingestion cycle...")
     
     try:
         # 1. Fetch and Load Flights
@@ -26,10 +27,20 @@ def run_ingestion():
         load_data("raw_weather", weather, lat=lat, lon=lon)
         print(f"Successfully loaded weather data.")
 
-        print(f"[{datetime.now()}] Ingestion complete!")
+        print(f"[{datetime.now()}] Cycle complete!")
     
     except Exception as e:
         print(f"Error during ingestion: {e}")
 
 if __name__ == "__main__":
-    run_ingestion()
+    # Check if 'loop' argument is passed
+    if len(sys.argv) > 1 and sys.argv[1] == "--loop":
+        interval = 600  # 10 minutes
+        print(f"Starting continuous ingestion every {interval} seconds...")
+        while True:
+            run_ingestion()
+            print(f"Waiting {interval} seconds for next cycle...")
+            time.sleep(interval)
+    else:
+        run_ingestion()
+        print("\nTip: Run 'python run_pipeline.py --loop' to run this continuously.")

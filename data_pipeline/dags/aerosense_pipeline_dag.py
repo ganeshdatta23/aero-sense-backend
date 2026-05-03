@@ -1,4 +1,10 @@
 from datetime import datetime, timedelta
+import sys
+import os
+
+# Ensure the root of the project is in the python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from data_pipeline.tasks.fetch_flight_data import fetch_flights
@@ -28,7 +34,7 @@ with DAG(
         load_data("raw_flights", flights)
         return flights
 
-    def ingest_weather_task(ti):
+    def ingest_weather_task():
         # In a real scenario, we might sample a few flights or regions
         # For simplicity, we'll fetch weather for a fixed significant hub
         lat, lon = "40.6413", "-73.7781" # JFK Airport

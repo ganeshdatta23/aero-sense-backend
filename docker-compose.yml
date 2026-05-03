@@ -1,5 +1,33 @@
 version: '3.8'
 
+x-airflow-common:
+  &airflow-common
+  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.9.1}
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres_airflow/airflow
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    # Project specific env
+    POSTGRES_SERVER: db
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: admin123
+    POSTGRES_DB: aerosense
+    PYTHONPATH: /opt/airflow
+  volumes:
+    - ./data_pipeline/dags:/opt/airflow/dags
+    - ./data_pipeline/tasks:/opt/airflow/data_pipeline/tasks
+    - ./data_pipeline/utils:/opt/airflow/data_pipeline/utils
+    - ./data_pipeline/config:/opt/airflow/data_pipeline/config
+    - ./backend:/opt/airflow/backend
+    - ./data_pipeline/airflow_requirements.txt:/requirements.txt
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    - postgres_airflow
+    - db
+
 services:
   db:
     image: postgres:15-alpine
@@ -7,10 +35,52 @@ services:
       - postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=admin123
       - POSTGRES_DB=aerosense
     ports:
       - "5432:5432"
+
+  postgres_airflow:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    volumes:
+      - postgres_airflow_data:/var/lib/postgresql/data
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    restart: always
+
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        pip install -r /requirements.txt
+        airflow db init
+        airflow users create \
+            --username admin \
+            --firstname admin \
+            --lastname admin \
+            --role Admin \
+            --email admin@example.com \
+            --password admin
 
   backend:
     build:
@@ -21,10 +91,11 @@ services:
     environment:
       - POSTGRES_SERVER=db
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=admin123
       - POSTGRES_DB=aerosense
     depends_on:
       - db
 
 volumes:
   postgres_data:
+  postgres_airflow_data:
