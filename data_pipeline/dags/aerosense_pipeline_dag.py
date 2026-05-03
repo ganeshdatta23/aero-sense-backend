@@ -9,7 +9,7 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from data_pipeline.tasks.fetch_flight_data import fetch_flights
 from data_pipeline.tasks.fetch_weather_data import fetch_weather
-from data_pipeline.tasks.load_data_to_db import load_data
+from data_pipeline.config.pipeline_config import INDIAN_CITIES
 
 default_args = {
     'owner': 'airflow',
@@ -35,11 +35,10 @@ with DAG(
         return flights
 
     def ingest_weather_task():
-        # In a real scenario, we might sample a few flights or regions
-        # For simplicity, we'll fetch weather for a fixed significant hub
-        lat, lon = "40.6413", "-73.7781" # JFK Airport
-        weather = fetch_weather(lat, lon)
-        load_data("raw_weather", weather, lat=lat, lon=lon)
+        for city in INDIAN_CITIES:
+            lat, lon = city["lat"], city["lon"]
+            weather = fetch_weather(lat, lon)
+            load_data("raw_weather", weather, lat=lat, lon=lon)
 
     fetch_flights_op = PythonOperator(
         task_id='fetch_flights',

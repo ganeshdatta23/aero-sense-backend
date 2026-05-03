@@ -9,6 +9,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from data_pipeline.tasks.fetch_flight_data import fetch_flights
 from data_pipeline.tasks.fetch_weather_data import fetch_weather
 from data_pipeline.tasks.load_data_to_db import load_data
+from data_pipeline.config.pipeline_config import INDIAN_CITIES
 
 def run_ingestion():
     print(f"[{datetime.now()}] Starting ingestion cycle...")
@@ -20,12 +21,14 @@ def run_ingestion():
         load_data("raw_flights", flights)
         print(f"Successfully loaded flight data.")
 
-        # 2. Fetch and Load Weather (JFK as a sample point)
-        lat, lon = "40.6413", "-73.7781"
-        print(f"Fetching weather for JFK ({lat}, {lon})...")
-        weather = fetch_weather(lat, lon)
-        load_data("raw_weather", weather, lat=lat, lon=lon)
-        print(f"Successfully loaded weather data.")
+        # 2. Fetch and Load Weather for all Indian Cities
+        for city in INDIAN_CITIES:
+            name, lat, lon = city["name"], city["lat"], city["lon"]
+            print(f"Fetching weather for {name} ({lat}, {lon})...")
+            weather = fetch_weather(lat, lon)
+            load_data("raw_weather", weather, lat=lat, lon=lon)
+        
+        print(f"Successfully loaded weather data for all cities.")
 
         print(f"[{datetime.now()}] Cycle complete!")
     

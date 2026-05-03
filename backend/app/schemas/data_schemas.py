@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any, List, Optional
 
 class FlightBase(BaseModel):
-    source: str
+    source: Optional[str] = "opensky"
     payload: Any
 
 class FlightCreate(FlightBase):
